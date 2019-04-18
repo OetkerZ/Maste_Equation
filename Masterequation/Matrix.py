@@ -4,14 +4,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix
 from numpy.linalg import inv
-n = 10
-Ca = 10 * pow(10, -17)
+Nl = 4
+Ca = 10 * pow(10, -16)
 e = 1.602 * pow(10, -19)
 kb = 1.38064852 * pow(10, -23)
 Ec = e * e / (2 * Ca)
-T = 10000
-
-pixel = 500
+T = 300
+gamma = 1000000000
+pixel = 160
 
 
 def muL(V):
@@ -35,8 +35,8 @@ def Nopt(Vg):
 
 
 def gammaf(E, m):
-    return 1 / (math.exp((E - m) / kb / T) + 1)
-    #E / (math.exp(E / (kb * T)) - 1)#
+    return 1 / (np.exp((E - m) / kb / T) + 1)
+    #E / (np.exp(E / (kb * T)) - 1)#
 
 
 def W(n1, n2, V, Vg):
@@ -47,29 +47,23 @@ def W(n1, n2, V, Vg):
 
 
 def Wn(n, V, Vg):
-    data = np.array([0])
-    row = np.array([0])
-    col = np.array([0])
+    data = np.ones_like(np.arange(n))
+    row = np.zeros(n)
+    col = np.arange(0, n)
     for i in range(n - 1):
         row = np.append(row, [i + 1])
         col = np.append(col, [i + 1])
         data = np.append(data, [-W(i + 2, i + 1, V, Vg) - W(i, i + 1, V, Vg)])
-    for j in range(n - 1):
-        row = np.append(row, [j])
-        col = np.append(col, [j + 1])
-        data = np.append(data, [W(i, i + 1, V, Vg)])
+    for j in range(n - 2):
+        row = np.append(row, [j + 1])
+        col = np.append(col, [j + 2])
+        data = np.append(data, [W(j, j + 1, V, Vg)])
     for k in range(n - 1):
         row = np.append(row, [k + 1])
         col = np.append(col, [k])
-        data = np.append(data, [W(i + 1, i, V, Vg)])
-
+        data = np.append(data, [W(k + 1, k, V, Vg)])
+    print(data,row,col)
     return coo_matrix((data, (row, col)), shape=(n, n)).toarray()
 
 
-WMAT = Wn(n, 0.02, 0.3)
-dim = np.arange(n * n)
-dim = dim.reshape(n, n)
-One = np.ones_like(dim)
-R = np.ones_like(np.arange(n))
-
-print(np.add(One, Wn(n, 0.02, 0.3)))
+print(Wn(Nl, 0.00002, 0.0003),W(1,0,0.00002,0.0003))
